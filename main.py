@@ -10,7 +10,7 @@ from tabulate import tabulate
 ###################################################################################
 # def of the class
 ####################################################################################
-class GraphSBM:
+class Graph:
     def __init__(self, personnes, trotinette, nodes_name, edeges_length,personnes_moove_w_tr):
         self.personnes = personnes
         self.trotinette = trotinette
@@ -87,7 +87,7 @@ def simulation_of_day(nodes_name, edeges_length, dt):
     personnes = init_personnes(100, nodes_priority)
     trotinettes = init_trotinette(40, nodes_priority)
     personnes_moove_w_tr=[personnes[k]*0.5 for k in range(len(personnes))]
-    G = GraphSBM(personnes, trotinettes, nodes_name, edeges_length,personnes_moove_w_tr)
+    G = Graph(personnes, trotinettes, nodes_name, edeges_length,personnes_moove_w_tr)
     G.trac_graph()
     return ()
 
