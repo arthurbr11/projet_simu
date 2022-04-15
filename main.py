@@ -1,6 +1,5 @@
 import itertools
 
-
 import numpy as np
 import random as rd
 import networkx as nx
