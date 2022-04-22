@@ -57,9 +57,25 @@ class Graph:
             data+=[[self.nodes_name[k],self.personnes[k],self.trotinette[k],self.personnes_moove_w_tr[k],diff]]
         print(tabulate(data, headers=["Location", "numbers of people", "numbers of trotinette", "nb_p want to moove","people who can't take trotinettes"]))
 
+class Agent:
+    def __init__(self,n_pos,type_habitant):
+        self.n_pos = n_pos #n_pos corespond au nombre qui caractérise l'endroit ou on est (entier entre 0 et 3)
+        self.type_habitant = type_habitant #type_habitant entier 0 ou 1,0 Paris,1 Champs-sur-Marne
+    
+    def proba_bouger(self,t):
+        if self.type_habitant==0:
+            
+            1
+        else:
+            1
+        
+
+
 
 ####################################################################################
 # tests
+####################################################################################
+
 nodes_name = ["Ponts", "Résidence", "Gare", "Super U"]
 nodes_priority = [0, 0.7, 0.3, 0]
 personnes = [0, 10, 10, 0]
