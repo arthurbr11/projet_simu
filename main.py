@@ -1,10 +1,10 @@
-import itertools
+#import itertools
 
 import numpy as np
 import random as rd
 import networkx as nx
 import matplotlib.pyplot as plt
-from tabulate import tabulate
+#from tabulate import tabulate
 
 
 ###################################################################################
@@ -101,12 +101,28 @@ class Agent:
         self.n_pos = n_pos #n_pos corespond to the number who caracterize the place where we are (int between 0 or 3)
         self.type_habitant = type_habitant #type_habitant int 0 or 1,0 Paris,1 Champs-sur-Marne
     
-    def proba_moove(self,t):
+    def proba_moove(self,t,dt):
+        s=0
+        U=rd.uniform(0,1)
+        a,b,c,d,e=unit7_9(t,dt),unit9_12(t,dt),unit12_14(t,dt),unit14_17(t,dt),unit17_21(t,dt)
         if self.type_habitant==0:
-            
-            1
+            Proba=[[a+b+0.6*c+0.25*d,0.3*c+0.25*d+0.45*e,0.25*d+0.25*e,0.1*c+0.25*d+0.25*e],
+                   [0.8*a+0.25*b+0.8*c+0.25*d+0.1*e,0.2*a+0.25*b+0.2*c+0.25*d+0.4*e,0.25*b+0.25*d+0.25*e,0.25*b+0.25*d+0.25*e],
+                   [a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e],
+                   [a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e]]
+            for k in range(4):
+                s+=Proba[self.n_pos][k]
+                if (U<s):
+                    return(k)
         else:
-            1
+            Proba=[[a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e],
+                   [a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e],
+                   [a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e],
+                   [a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e]]
+                        for k in range(4):
+            s+=Proba[self.n_pos][k]
+            if (U<s):
+                return(k)
         
 
 
@@ -144,6 +160,8 @@ def init_trotinette(nb, nodes_priority):# a faire
 
 def simulation_of_day(nodes_name, edeges_length, dt,p):
     data=[]
+    
+    
     nodes_priority=[1-p,0,p,0]
     trotinettes = init_trotinette(40, nodes_priority)
     
