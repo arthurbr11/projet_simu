@@ -120,10 +120,10 @@ class Agent:
                 if (U<s):
                     return(k)
         else:#matrice for Paris student
-            Proba=[[a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e],
-                   [a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e],
-                   [a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e],
-                   [a+b+c+d+e,a+b+c+d+e,a+b+c+d+e,a+b+c+d+e]]
+            Proba=[[a+b+(1/2)*c+(2/3)*d+(1/4)*e,(1/4)*e,(1/4)*c+(1/3)*d+(1/2)*e,(1/4)*c],
+                   [(1/2)*(a+b)+(2/5)*d,(1/2)*(a+b+c),(1/4)*c+(2/5)*d+e,(1/4)*c+(1/5)*d],
+                   [a+(2/3)*b+(1/4)*c+(1/2)*d+(1/8)*e,(1/8)*e,(1/3)*b+(1/2)*(c+d)+(3/4)*e,(1/4)*c],
+                   [(1/3)*(a+b)+(1/2)*d,(1/8)*c+(1/4)*e,(1/2)*(a+b)+(3/8)*c+(1/2)*d+(3/4)*e,(1/3)*(a+b)+(1/2)*c+(1/4)*d]]
             for k in range(4):
                 s+=Proba[self.n_pos][k]
                 if (U<s):
@@ -138,9 +138,10 @@ def utility(data):
     sum_people_who_cant_take_trotinettes=0
     sum_trotinettes_not_use=0
     for k in range(len(data)):
-        sum_trotinettes_not_use+=data[k][-1]
-        sum_people_who_cant_take_trotinettes+=data[k][-2]
-    return(sum_people_who_cant_take_trotinettes+sum_trotinettes_not_use)
+        for j in range (len(data[k])):
+            sum_trotinettes_not_use+=data[k][j][-1]
+            sum_people_who_cant_take_trotinettes+=data[k][j][-2]
+    return(sum_people_who_cant_take_trotinettes,sum_trotinettes_not_use,sum_people_who_cant_take_trotinettes+sum_trotinettes_not_use)
         
 ####################################################################################
 # def variables
@@ -218,8 +219,9 @@ def simulation_of_day(nodes_name, edeges_length, dt,p):
     
     return (data)
 
-data=simulation_of_day(nodes_name, edeges_length, 30,1)
+data=simulation_of_day(nodes_name, edeges_length, 30,0.5)
 U=utility(data)
+print(U)
 
 
 
