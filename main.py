@@ -1,13 +1,39 @@
 #import itertools
-
 import numpy as np
 import random as rd
 import networkx as nx
 import matplotlib.pyplot as plt
 from tabulate import tabulate
 
+####################################################################################
+# We fix the constant of the problem
+####################################################################################
 
-###################################################################################
+vm=83 #speed by foot in m/min
+vt=332 #speed by trotinette
+
+#Constants multiplicatives
+alpha=1.5
+beta=3
+gamma=1
+
+
+# names of the place of our modelisation
+nodes_name = ["Ponts", "Résidence", "Gare", "Super U"]
+
+#Matrix length in m
+d_ER = 1100 
+d_EG = 1250
+d_EC = 950
+d_RG = 1800
+d_RC = 650
+d_GC = 2000
+edeges_length = [[0, d_ER,d_EG,d_EC],
+                 [d_ER, 0, d_RG, d_RC],
+                 [d_EG, d_RG, 0, d_GC],
+                 [d_EC, d_RC, d_GC, 0]]
+
+####################################################################################
 #different function  for the time
 ####################################################################################
 
@@ -37,26 +63,26 @@ def unit17_21(t,dt):
     if t>=nb_interval_hours*10 and t<=nb_interval_hours*14:
         return(1)
     return(0)
-
 def affichetemps(t,dt):
     minutes=int(7*60+t*dt)
     hours=int(minutes/60)
     minutes-=int(hours*60)
     return(str(hours)+"h"+str(minutes)+"min")
     
-
 ###################################################################################
-# def of the class
+# def of the class for the GRAPH
 ####################################################################################
 class Graph:
-    def __init__(self, personnes, trotinette, nodes_name, edeges_length,personnes_w_moove_w_tr):
+    
+    def __init__(self, personnes, trotinette, nodes_name, edeges_length,personnes_w_moove_w_tr):# function to initialize our GRAPH
         self.personnes = personnes #list of numbers of people at each place (lenght is the same as numbers of places)
         self.trotinette = trotinette #list of numbers of trotinette at each place (lenght is the same as numbers of places)
         self.nodes_name = nodes_name #list of places names (lenght is the same as numbers of places)
         self.Adj = np.ones((len(self.nodes_name), len(self.nodes_name))) - np.identity(len(self.nodes_name)) #adjacence matrix of the graph
         self.edges_length = edeges_length #matrix of lenght beetween each place 
         self.personnes_w_moove_w_tr = personnes_w_moove_w_tr  #list of numbers of people who wants to moove with trotinette at each place (lenght is the same as numbers of places)
-    def trac_graph(self,t,dt):
+    
+    def trac_graph(self,t,dt):#function to trac our GRAPH and modulate our data_base
         nb_endroit = len(self.nodes_name)
         G = nx.Graph()
         for k in range(len(self.nodes_name)):
@@ -98,15 +124,20 @@ class Graph:
         print(tabulate(data, headers=["Location", "numbers of people", "numbers of trotinette", "nb_p want to moove","people who can't take trotinettes","trotinette_not_use"]))
         return(data)
 
+###################################################################################
+# def of the class for the AGENT
+####################################################################################
+
 class Agent:
-    def __init__(self,n_pos,type_habitant,n_pos_apres,w_or_wo):
+    
+    def __init__(self,n_pos,type_habitant,n_pos_apres,w_or_wo):# function to initialize our AGENT
         
         self.n_pos = n_pos #n_pos corespond to the number who caracterize the place where we are (int between 0 or 3)
         self.type_habitant = type_habitant #type_habitant int 0 or 1, 0 Champs-sur-Marne ,1 Paris
         self.n_pos_apres = n_pos_apres # the position the instant after 
         self.w_or_wo = w_or_wo # 0 if we moove without trotinette -1 if we don't moove 1 if we moove with trotinette
         
-    def proba_moove(self,t,dt):
+    def proba_moove(self,t,dt): # function which return the place where the agent will go the next  t+1 (it can be the place where he is at t)
         s=0
         U=rd.uniform(0,1)
         a,b,c,d,e=unit7_9(t,dt),unit9_12(t,dt),unit12_14(t,dt),unit14_17(t,dt),unit17_21(t,dt)
@@ -129,29 +160,21 @@ class Agent:
                 if (U<s):
                     return(k)
         
-
 ####################################################################################
-# def fonction utilité
+# def utility function
 ####################################################################################
 
-def utility(data):
-    sum_people_who_cant_take_trotinettes=0
+def utility(data,dt,T):
     sum_trotinettes_not_use=0
     for k in range(len(data)):
         for j in range (len(data[k])):
             sum_trotinettes_not_use+=data[k][j][-1]
-            sum_people_who_cant_take_trotinettes+=data[k][j][-2]
-    return(sum_people_who_cant_take_trotinettes,sum_trotinettes_not_use,sum_people_who_cant_take_trotinettes+sum_trotinettes_not_use)
-        
-####################################################################################
-# def variables
-####################################################################################
+    L=sum_trotinettes_not_use*dt #Total time where the trotinettes are not use
+    return(-(beta*T+gamma*L))
 
-nodes_name = ["Ponts", "Résidence", "Gare", "Super U"]
-edeges_length = [[0, 0, 0, 0],
-                 [0.6, 0, 0, 0],
-                 [0.35, 1.1, 0, 0],
-                 [0.9, 1.5, 0.6, 0.3]]
+####################################################################################
+# def function of initialization 
+####################################################################################
 
 def init_personnes(nb,p): # nb is numbber of agent in our simulation , p is the proportion of people who are agent 0
     personnes = [0,0,0,0]
@@ -168,60 +191,101 @@ def init_personnes(nb,p): # nb is numbber of agent in our simulation , p is the 
     return (agent,personnes)
 
 
-def init_trotinette(nb, nodes_priority):# a faire 
-    trotinettes = []
-    for k in nodes_priority:
-        trotinettes += [int(k * (nb + 1))]
+def init_trotinette(nb, p,typ):# typ==0 (equal repart) typ==1 (1/2 residence 1/2 gare) typ==2 (p residence 1-p gare)
+    trotinettes = [0,0,0,0]
+    
+    if (typ==0):
+        n=int(1/4*nb)
+        trotinettes =[n,n,n,n]
+    elif(typ==1):
+        n=int(1/2*nb)
+        trotinettes =[0,n,n,0]
+    else:
+        n=int(p*nb)
+        trotinettes =[0,n,nb-n,0]
     return (trotinettes)
 
+####################################################################################
+# def function of the main loop
+####################################################################################
 
-def simulation_of_day(nodes_name, edeges_length, dt,p):
-    data=[]
+def simulation_of_day(nodes_name,dt,p,f,typ,nb_trot):
     
+    rd.seed(30) # We fix the seed of the module random in order to have all the time the same sequence of pick 
+
+    data=[] #initialization of our database
+    T=0 #Time total of travel
+
+    trotinettes = init_trotinette(nb_trot,p,typ) #initialization of our trotinette
     
-    nodes_priority=[0,p,1-p,0]
-    trotinettes = init_trotinette(40, nodes_priority)
-    
-    agent,personnes = init_personnes(100,p)
+    agent,personnes = init_personnes(100,p) #initialization of our agent
     personnes_w_moove_w_tr=[0,0,0,0]
-    print(personnes)
+
     
     nb_interval_hours=int(60/dt)
     nb_intervals=int((21-7)*nb_interval_hours)
     
     for t in range(0,nb_intervals+1):
+        
         trotinettes_moove=[0,0,0,0]
         personnes_w_moove_w_tr=[0,0,0,0]
+        
         for k in range (len(agent)):
+            #we update the number of people in the place
             personnes[agent[k].n_pos]-=1
             personnes[agent[k].n_pos_apres]+=1
-            if (agent[k].w_or_wo==1 and trotinettes[agent[k].n_pos]!=0 ):
+            
+            if (agent[k].w_or_wo==1 and trotinettes[agent[k].n_pos]!=0 ):#we update the number of people in the trotinette if the personn moove and take the trotinette
                 trotinettes[agent[k].n_pos]-=1
                 trotinettes[agent[k].n_pos_apres]+=1
-            agent[k].n_pos=agent[k].n_pos_apres
-            i=agent[k].proba_moove(t, dt)
-            if (i!=agent[k].n_pos):
+            
+            agent[k].n_pos=agent[k].n_pos_apres #updtae the position of our agent
+            
+            i=agent[k].proba_moove(t, dt) #compute the next place where he will go
+            
+            if (i!=agent[k].n_pos):# if he don't stay in the same place
                 personnes_w_moove_w_tr[agent[k].n_pos]+=1
-                agent[k].n_pos_apres=i
-                if (trotinettes[agent[k].n_pos]-trotinettes_moove[agent[k].n_pos]!=0):
+                U=rd.uniform(0,1)
+                if (trotinettes[agent[k].n_pos]-trotinettes_moove[agent[k].n_pos]!=0):#update when he moove and he have trotinette to do it 
                     trotinettes_moove[agent[k].n_pos]+=1
                     agent[k].w_or_wo=1
-                else:
+                    agent[k].n_pos_apres=i
+                    T+=edeges_length[i][agent[k].n_pos]/vt
+                elif (U<f):# update when he moove despite he don't have trotinette and choose to not wait
                     agent[k].w_or_wo=0
-            else:
+                    agent[k].n_pos_apres=i
+                    T+=alpha*edeges_length[i][agent[k].n_pos]/vm
+                else:# update when he stay in the same place bc he don't have trotinette and choose to wait
+                    agent[k].n_pos_apres=agent[k].n_pos
+                    agent[k].w_or_wo=-1
+                    T+=dt
+                    
+                    
+            else:# update when he stay in the same place
                 agent[k].n_pos_apres=agent[k].n_pos
                 agent[k].w_or_wo=-1
                 
                     
         print(affichetemps(t, dt))
-        G = Graph(personnes, trotinettes, nodes_name, edeges_length,personnes_w_moove_w_tr)
+        G = Graph(personnes, trotinettes, nodes_name,edeges_length,personnes_w_moove_w_tr)
         data+=[G.trac_graph(t,dt)]
     
-    return (data)
+    return (data,T)
 
-data=simulation_of_day(nodes_name, edeges_length, 30,0.5)
-U=utility(data)
+
+####################################################################################
+# THE MAIN LOOP UTILISATION
+####################################################################################
+dt=30
+p=0.5
+f=1 #if f=1 never wait if f=0 wait all the time
+typ=2
+nb_trot=40
+
+data,T=simulation_of_day(nodes_name,dt,p,f,typ,nb_trot)
+U=utility(data,dt,T)
 print(U)
+
 
 
 
