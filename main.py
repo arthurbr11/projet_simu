@@ -7,7 +7,7 @@ from tabulate import tabulate
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator
 from tqdm import tqdm
-
+import plotly.graph_objects as go
 
 ####################################################################################
 # We fix the constant of the problem
@@ -292,8 +292,6 @@ print(U)
 
 
 def tracer_3d(inter,nodes_name,dt,p,typ):
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    
     # Make data.
     X = np.linspace(0,1,inter) #f
     Y = np.linspace(10,100,inter) #NB
@@ -307,6 +305,7 @@ def tracer_3d(inter,nodes_name,dt,p,typ):
             Z[i][j]=utility(data,dt,T)/1000  
     
     # Plot the surface.
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
                            linewidth=0, antialiased=False)
     
@@ -317,11 +316,18 @@ def tracer_3d(inter,nodes_name,dt,p,typ):
     plt.title ("Type de répartition "+str(typ))
     plt.show()
     
+    # # Plot the surface (only in jupyter)
+    # fig = (go.Figure(data=[go.Surface(z=Z, x=X, y=Y, opacity = 1)]))
+
+    # fig.update_layout(template= "plotly_dark", margin=dict(l=0, r=0, b=0, t=0))
+    # fig.layout.scene.camera.projection.type = "orthographic"
+    # fig.show() 
+
+# To do this 3 function we have to comment all the print in the main_loop and in the generation of the graph
 # tracer_3d(10, nodes_name, dt, p, 0)
 # tracer_3d(10, nodes_name, dt, p, 1)
 # tracer_3d(10, nodes_name, dt, p, 2)
 
-    
 
 
 
