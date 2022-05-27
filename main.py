@@ -4,6 +4,10 @@ import random as rd
 import networkx as nx
 import matplotlib.pyplot as plt
 from tabulate import tabulate
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator
+from tqdm import tqdm
+
 
 ####################################################################################
 # We fix the constant of the problem
@@ -92,26 +96,25 @@ class Graph:
             for j in range(i):
                 if A[i, j] == 1:
                     G.add_edge(self.nodes_name[i],self.nodes_name[j],weight=self.edges_length[i][j])
-        pos = nx.spring_layout(G, seed=7)
+        # pos = nx.spring_layout(G, seed=7)
+        # nodes_saturate = [(u) for (u, d) in G.nodes(data=True) if d['weight'] >= 0]
+        # nodes_not_saturate = [(u) for (u, d) in G.nodes(data=True) if d['weight'] <= 0]
 
-        nodes_saturate = [(u) for (u, d) in G.nodes(data=True) if d['weight'] >= 0]
-        nodes_not_saturate = [(u) for (u, d) in G.nodes(data=True) if d['weight'] <= 0]
-
-        ax = plt.gca()
-        ax.set_title("Graph instant "+str(affichetemps(t, dt)))
-        # nodes
-        nx.draw_networkx_nodes(G, pos, nodelist=nodes_saturate, node_color="r", node_size=1500, ax=ax)
-        nx.draw_networkx_nodes(G, pos, nodelist=nodes_not_saturate, node_color="g", node_size=1500, ax=ax)
-        # edges
-        nx.draw_networkx_edges(G, pos, width=2, ax=ax)
-        # node labels
-        nx.draw_networkx_labels(G, pos, font_size=10, font_family="sans-serif", font_color="b", ax=ax)
-        # edge weight labels
-        edge_labels = nx.get_edge_attributes(G, "weight")
-        nx.draw_networkx_edge_labels(G, pos, edge_labels, ax=ax)
-        plt.axis("off")
-        plt.tight_layout()
-        plt.show()
+        # ax = plt.gca()
+        # ax.set_title("Graph instant "+str(affichetemps(t, dt)))
+        # # nodes
+        # nx.draw_networkx_nodes(G, pos, nodelist=nodes_saturate, node_color="r", node_size=1500, ax=ax)
+        # nx.draw_networkx_nodes(G, pos, nodelist=nodes_not_saturate, node_color="g", node_size=1500, ax=ax)
+        # # edges
+        # nx.draw_networkx_edges(G, pos, width=2, ax=ax)
+        # # node labels
+        # nx.draw_networkx_labels(G, pos, font_size=10, font_family="sans-serif", font_color="b", ax=ax)
+        # # edge weight labels
+        # edge_labels = nx.get_edge_attributes(G, "weight")
+        # nx.draw_networkx_edge_labels(G, pos, edge_labels, ax=ax)
+        # plt.axis("off")
+        # plt.tight_layout()
+        # plt.show()
         data =[]
         for k in range (len(self.nodes_name)):
             angry_people=0
@@ -121,7 +124,7 @@ class Graph:
             else: 
                 trotinette_not_use=self.trotinette[k]-self.personnes_w_moove_w_tr[k] 
             data+=[[self.nodes_name[k],self.personnes[k],self.trotinette[k],self.personnes_w_moove_w_tr[k],angry_people,trotinette_not_use]]
-        print(tabulate(data, headers=["Location", "numbers of people", "numbers of trotinette", "nb_p want to moove","people who can't take trotinettes","trotinette_not_use"]))
+        #print(tabulate(data, headers=["Location", "numbers of people", "numbers of trotinette", "nb_p want to moove","people who can't take trotinettes","trotinette_not_use"]))
         return(data)
 
 ###################################################################################
@@ -266,7 +269,7 @@ def simulation_of_day(nodes_name,dt,p,f,typ,nb_trot):
                 agent[k].w_or_wo=-1
                 
                     
-        print(affichetemps(t, dt))
+        #print(affichetemps(t, dt))
         G = Graph(personnes, trotinettes, nodes_name,edeges_length,personnes_w_moove_w_tr)
         data+=[G.trac_graph(t,dt)]
     
@@ -279,12 +282,44 @@ def simulation_of_day(nodes_name,dt,p,f,typ,nb_trot):
 dt=30
 p=0.5
 f=1 #if f=1 never wait if f=0 wait all the time
-typ=2
+typ=1
 nb_trot=40
 
-data,T=simulation_of_day(nodes_name,dt,p,f,typ,nb_trot)
-U=utility(data,dt,T)
-print(U)
+# data,T=simulation_of_day(nodes_name,dt,p,f,typ,nb_trot)
+# U=utility(data,dt,T)
+# print(U)
+
+
+
+
+
+inter=10
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+# Make data.
+X = np.linspace(0,1,inter) #f
+Y = np.linspace(10,100,inter) #NB
+X, Y = np.meshgrid(X, Y)
+
+
+Z = np.zeros((inter,inter)) # U 
+for i in tqdm(range(0,inter)):
+    for j in range(0,inter):
+        data,T=simulation_of_day(nodes_name,dt,p,X[i][j],typ,Y[i][j])
+        Z[i][j]=utility(data,dt,T)/1000             
+
+# Plot the surface.
+surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+
+# Add a color bar which maps values to colors.
+fig.colorbar(surf, shrink=0.5, aspect=5)
+
+plt.show()
+
+    
+
 
 
 
